@@ -1,5 +1,6 @@
 <script>
 	import { onMount, onDestroy } from "svelte";
+	import { calcfrags } from "./editor";
 
 	export let value = "Edit me";
 
@@ -19,22 +20,20 @@
 	});
 
 	let ed_w = 0;
-	let ed_l = 0;
-	$: ed_c = Math.floor(ed_w / chsize.x);
-	$: ed_h = Math.floor(ed_l / chsize.y);
+	let ed_h = 0;
+	$: ed_cols = Math.floor(ed_w / chsize.x);
+	$: ed_rows = Math.floor(ed_h / chsize.y);
 	$: getLines(value);
 
-	let items;
-	let lines;
+	let items = [];
 	function getLines(v) {
-		lines = v.split("\n");
-		items = [];
-		lines.forEach(item => {
-			if (item.length == 0) {
-				items.push("\u200b");
-			} else {
-				items.push(item);
+		v.split("\n").forEach((line) => {
+			let item = calcfrags(line, ed_cols);
+			// we can decorate the presenation if we need here
+			if (line.length == 0) {
+				item.pres = "\u200b";
 			}
+			items.push(item);
 		});
 	}
 
@@ -42,7 +41,6 @@
 		let x = Math.floor(0.5 + (e.clientX - origin.x) / chsize.x);
 		let y = Math.floor((e.clientY - origin.y) / chsize.y);
 
-		
 		y = Math.min(y, lines.length - 1);
 		x = Math.min(x, lines[y].length);
 		return { x: x, y: y };
@@ -71,13 +69,13 @@
 		// move the cursor
 		n_c_x_px = sel_e.x * chsize.x;
 		n_c_y_px = sel_e.y * chsize.y;
-		n_cursor_enable =  true;
+		n_cursor_enable = true;
 	}
 
 	function blink_cursor() {
 		// update during blanking period to make it easy on eye
 		if (!cursor) {
-			c_x_px = n_c_x_px-1;
+			c_x_px = n_c_x_px - 1;
 			c_y_px = n_c_y_px;
 			cursor_enable = n_cursor_enable;
 		}
@@ -87,7 +85,13 @@
 
 <div class="editor-container">
 	<div class="editor" style={`--ch_h: ${chsize.y}px;`}>
-		<div  bind:clientWidth={ed_w} bind:clientHeight={ed_h} class="editor-inner" on:mousedown={selStart} on:mouseup={selEnd}>
+		<div
+			bind:clientWidth={ed_w}
+			bind:clientHeight={ed_h}
+			class="editor-inner"
+			on:mousedown={selStart}
+			on:mouseup={selEnd}
+		>
 			<div class="measure container">
 				<pre bind:this={m_el}>x</pre>
 			</div>
@@ -99,7 +103,7 @@
 			</div>
 			<div class="container">
 				{#each items as item}
-					<pre class="line">{item}</pre>
+					<pre class="line">{item.pres}</pre>
 				{/each}
 			</div>
 		</div>
@@ -173,6 +177,4 @@
 		z-index: 2;
 		direction: ltr;
 	}
-
-
 </style>
