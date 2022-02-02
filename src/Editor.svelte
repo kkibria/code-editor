@@ -1,6 +1,8 @@
 <script>
 	import { onMount, onDestroy } from "svelte";
 
+	export let value = "Edit me";
+
 	let chsize = { x: 0, y: 0 };
 	let origin = { x: 0, y: 0 };
 	let m_el;
@@ -11,64 +13,89 @@
 		origin = { x: cr.left, y: cr.top };
 	});
 
-	const interval = setInterval(blink_cursor, 500);
+	const interval = setInterval(blink_cursor, 300);
 	onDestroy(() => {
 		clearInterval(interval);
 	});
 
-	export let value = "Edit me";
+	let ed_w = 0;
+	let ed_l = 0;
+	$: ed_c = Math.floor(ed_w / chsize.x);
+	$: ed_h = Math.floor(ed_l / chsize.y);
 	$: getLines(value);
+
 	let items;
+	let lines;
 	function getLines(v) {
-		items = v.split("\n");
+		lines = v.split("\n");
+		items = [];
+		lines.forEach(item => {
+			if (item.length == 0) {
+				items.push("\u200b");
+			} else {
+				items.push(item);
+			}
+		});
 	}
 
 	function mouse_ev(e) {
-		let x = Math.floor((e.clientX - origin.x) / chsize.x);
+		let x = Math.floor(0.5 + (e.clientX - origin.x) / chsize.x);
 		let y = Math.floor((e.clientY - origin.y) / chsize.y);
+
+		
+		y = Math.min(y, lines.length - 1);
+		x = Math.min(x, lines[y].length);
 		return { x: x, y: y };
 	}
+
+	let cursor = true;
+	let cursor_enable = true;
+	let c_x_px = 0;
+	let c_y_px = 0;
+
+	$: cursor_vis = cursor_enable ? "visible" : "hidden";
+	$: cursor_style = cursor ? "solid" : "none";
 
 	let sel_s;
 	let sel_e;
 	function selStart(e) {
 		sel_s = mouse_ev(e);
-		console.log(`selstart`, sel_s);
+		cursor_enable = false;
 	}
 
+	let n_c_x_px = 0;
+	let n_c_y_px = 0;
+	let n_cursor_enable = true;
 	function selEnd(e) {
 		sel_e = mouse_ev(e);
-		console.log(`selend`, sel_e);
-		if (sel_s.x == sel_e.x && sel_s.x == sel_e.x) {
-			// move the cursor here
-			cursor_enable = true;
-			c_x_px = sel_e.x * chsize.x;
-			c_y_px = sel_e.y * chsize.y;
-		} else {
-			cursor_enable = false;
-		}
+		// move the cursor
+		n_c_x_px = sel_e.x * chsize.x;
+		n_c_y_px = sel_e.y * chsize.y;
+		n_cursor_enable =  true;
 	}
 
-	let cursor = false;
-	let cursor_enable = true;
-	let cursor_style = "solid";
-	let c_x_px = 0;
-	let c_y_px = 0;
-
 	function blink_cursor() {
+		// update during blanking period to make it easy on eye
+		if (!cursor) {
+			c_x_px = n_c_x_px-1;
+			c_y_px = n_c_y_px;
+			cursor_enable = n_cursor_enable;
+		}
 		cursor = !cursor;
-		cursor_style = cursor && cursor_enable ? "solid" : "none";
 	}
 </script>
 
 <div class="editor-container">
 	<div class="editor" style={`--ch_h: ${chsize.y}px;`}>
-		<div class="editor-inner" on:mousedown={selStart} on:mouseup={selEnd}>
+		<div  bind:clientWidth={ed_w} bind:clientHeight={ed_h} class="editor-inner" on:mousedown={selStart} on:mouseup={selEnd}>
 			<div class="measure container">
 				<pre bind:this={m_el}>x</pre>
 			</div>
-			<div class="cursor" style={`--cursor: ${cursor_style}; --cursor_x: ${c_x_px}px; --cursor_y: ${c_y_px}px;`}>
-				<pre bind:this={m_el}>&nbsp;</pre>
+			<div
+				class="cursor container"
+				style={`--cursor: ${cursor_style}; --cursor_vis: ${cursor_vis}; --cursor_x: ${c_x_px}px; --cursor_y: ${c_y_px}px;`}
+			>
+				<pre>&nbsp;</pre>
 			</div>
 			<div class="container">
 				{#each items as item}
@@ -88,10 +115,7 @@
 	}
 
 	div.editor {
-		display: flex;
-		outline: palegreen;
-		border: peru;
-		background-color: plum;
+		background-color: rgb(240, 240, 240);
 		flex-grow: 1;
 		padding: 4px;
 		margin: 0px;
@@ -105,21 +129,17 @@
 	}
 
 	div.container {
-		position: absolute;
-		left: 0px;
-		top: 0px;
 		margin: 0px;
 		padding: 0px;
 	}
 
 	div.measure {
+		position: absolute;
 		overflow: hidden;
 		height: 0px;
 	}
 
 	div.measure pre {
-		left: 0px;
-		top: 0px;
 		margin: 0px;
 		padding: 0px;
 	}
@@ -128,29 +148,31 @@
 		position: absolute;
 		left: var(--cursor_x);
 		top: var(--cursor_y);
-		margin: 0px;
-		padding: 0px;
 	}
 
 	div.cursor pre {
 		border-left-color: black;
-		border-left-width: 1.5px;
+		border-left-width: 2px;
 		border-left-style: var(--cursor);
-		left: 0px;
-		top: 0px;
 		margin: 0px;
 		padding: 0px;
+		visibility: var(--cursor_vis);
 	}
 
 	pre.line {
+		position: relative;
 		overflow-wrap: break-word;
-		word-wrap: break-word;
+		overflow: visible;
 		white-space: pre-wrap;
 		word-break: normal;
-		outline: none;
 		width: 100%;
 		margin: 0px;
 		padding: 0px;
-		height: var(--ch_h);
+		line-height: var(--ch_h);
+		padding-right: 0.1px;
+		z-index: 2;
+		direction: ltr;
 	}
+
+
 </style>
