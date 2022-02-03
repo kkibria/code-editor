@@ -46,6 +46,11 @@
 		// console.log((row2line.length == ed_rows), `row2line.length: ${row2line.length} != ed_rows: ${ed_rows}`);
 	}
 
+	function keyUp(e) {
+		console.log(e);
+	}
+
+	let ed_el;
 	function mouse_ev(e) {
 		let x = Math.floor(0.7 + (e.clientX - origin.x) / chsize.x);
 		let y = Math.floor((e.clientY - origin.y) / chsize.y);
@@ -58,6 +63,7 @@
 
 		x = Math.min(x, b - a);
 		charno = a + x;
+		ed_el.focus();
 		return { x: x, y: y, lineno: lineno, charno: charno };
 	}
 
@@ -66,7 +72,8 @@
 	let c_x_px = 0;
 	let c_y_px = 0;
 
-	$: cursor_vis = cursor_enable ? "visible" : "hidden";
+	let focused = false;
+	$: cursor_vis = cursor_enable && focused ? "visible" : "hidden";
 	$: cursor_style = cursor ? "solid" : "none";
 
 	let sel_s;
@@ -87,10 +94,18 @@
 		n_cursor_enable = true;
 	}
 
+	function handleFocus(e) {
+		focused = true;
+	}
+
+	function handleBlur(e) {
+		focused = false;
+	}
+
 	function blink_cursor() {
 		// update during blanking period to make it easy on eye
 		if (!cursor) {
-			c_x_px = n_c_x_px - 1;
+			c_x_px = n_c_x_px - 0.5;
 			c_y_px = n_c_y_px;
 			cursor_enable = n_cursor_enable;
 		}
@@ -101,11 +116,16 @@
 <div class="editor-container">
 	<div class="editor" style={`--ch_h: ${chsize.y}px;`}>
 		<div
+			bind:this={ed_el}
+			tabindex="0"
 			bind:clientWidth={ed_w}
 			bind:clientHeight={ed_h}
 			class="editor-inner"
 			on:mousedown={selStart}
 			on:mouseup={selEnd}
+			on:keyup={keyUp}
+			on:focus={handleFocus}
+			on:blur={handleBlur}
 		>
 			<div class="measure container">
 				<pre bind:this={m_el}>x</pre>
@@ -145,6 +165,7 @@
 		position: relative;
 		padding: 0px;
 		margin: 0px;
+		outline: none;
 	}
 
 	div.container {
@@ -175,6 +196,7 @@
 		border-left-style: var(--cursor);
 		margin: 0px;
 		padding: 0px;
+		opacity: 0.5;
 		visibility: var(--cursor_vis);
 	}
 
@@ -192,6 +214,4 @@
 		z-index: 2;
 		direction: ltr;
 	}
-
-
 </style>
