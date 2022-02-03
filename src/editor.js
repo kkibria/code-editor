@@ -10,12 +10,11 @@ export function calcfrags(line, maxcols) {
     let len = line.length;
     let brkidx = [];
 
-
     let fncbgn = 0;
     let fncend;
     let curlen;
 
-    function savebrk () {
+    function savebrk() {
         fncend = fncbgn + maxcols;
         curlen = len - fncbgn;
         brkidx.push(fncbgn);
@@ -28,7 +27,7 @@ export function calcfrags(line, maxcols) {
             let i = fncend - 1;
             while (i > fncbgn) {
                 if (!isW(i)) {
-                    nxtbgn = i+1;
+                    nxtbgn = i + 1;
                     break;
                 }
                 i--;
@@ -40,7 +39,7 @@ export function calcfrags(line, maxcols) {
     brkidx.push(len);
     let frags = [];
     for (let i = 1; i < brkidx.length; i++) {
-        frags.push([brkidx[i-1], brkidx[i]]);
+        frags.push([brkidx[i - 1], brkidx[i]]);
     }
     return { cont: line, pres: pres, frags: frags };
 }

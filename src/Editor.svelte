@@ -23,27 +23,43 @@
 	let ed_h = 0;
 	$: ed_cols = Math.floor(ed_w / chsize.x);
 	$: ed_rows = Math.floor(ed_h / chsize.y);
-	$: getLines(value);
+	$: getLines(value, ed_cols);
 
-	let items = [];
-	function getLines(v) {
+	let row2line;
+	let items;
+	function getLines(v, cols) {
+		row2line = []	
+		items = [];
+		let lineno = 0;
 		v.split("\n").forEach((line) => {
-			let item = calcfrags(line, ed_cols);
+			let item = calcfrags(line, cols);
 			// we can decorate the presenation if we need here
 			if (line.length == 0) {
 				item.pres = "\u200b";
 			}
+			for (let i = 0; i < item.frags.length; i++) {		
+				row2line.push([lineno, i])	
+			} 
 			items.push(item);
+			lineno++;
 		});
+		// console.log((row2line.length == ed_rows), `row2line.length: ${row2line.length} != ed_rows: ${ed_rows}`);
 	}
 
 	function mouse_ev(e) {
-		let x = Math.floor(0.5 + (e.clientX - origin.x) / chsize.x);
+		let x = Math.floor(0.7 + (e.clientX - origin.x) / chsize.x);
 		let y = Math.floor((e.clientY - origin.y) / chsize.y);
 
-		y = Math.min(y, lines.length - 1);
-		x = Math.min(x, lines[y].length);
-		return { x: x, y: y };
+		y = Math.min(y, row2line.length - 1);
+
+		let lineno, fragno, a, b, charno;
+		[lineno, fragno] = row2line[y];
+		[a, b] = items[lineno].frags[fragno];
+
+		x = Math.min(x, b-a);
+		charno = a+x;
+		// console.log(lineno, fragno, a, b, x, y);
+		return { x: x, y: y, lineno: lineno, charno: charno };
 	}
 
 	let cursor = true;
