@@ -58,7 +58,6 @@
 
 		x = Math.min(x, b-a);
 		charno = a+x;
-		// console.log(lineno, fragno, a, b, x, y);
 		return { x: x, y: y, lineno: lineno, charno: charno };
 	}
 
