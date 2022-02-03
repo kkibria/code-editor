@@ -28,7 +28,7 @@
 	let row2line;
 	let items;
 	function getLines(v, cols) {
-		row2line = []	
+		row2line = [];
 		items = [];
 		let lineno = 0;
 		v.split("\n").forEach((line) => {
@@ -37,9 +37,9 @@
 			if (line.length == 0) {
 				item.pres = "\u200b";
 			}
-			for (let i = 0; i < item.frags.length; i++) {		
-				row2line.push([lineno, i])	
-			} 
+			for (let i = 0; i < item.frags.length; i++) {
+				row2line.push([lineno, i]);
+			}
 			items.push(item);
 			lineno++;
 		});
@@ -56,8 +56,8 @@
 		[lineno, fragno] = row2line[y];
 		[a, b] = items[lineno].frags[fragno];
 
-		x = Math.min(x, b-a);
-		charno = a+x;
+		x = Math.min(x, b - a);
+		charno = a + x;
 		return { x: x, y: y, lineno: lineno, charno: charno };
 	}
 
@@ -138,11 +138,11 @@
 		flex-grow: 1;
 		padding: 4px;
 		margin: 0px;
+		cursor: text;
 	}
 
 	div.editor-inner {
 		position: relative;
-		flex-grow: 1;
 		padding: 0px;
 		margin: 0px;
 	}
@@ -192,4 +192,6 @@
 		z-index: 2;
 		direction: ltr;
 	}
+
+
 </style>
