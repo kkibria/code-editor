@@ -116,11 +116,11 @@
 <div class="editor-container">
 	<div class="editor" style={`--ch_h: ${chsize.y}px;`}>
 		<div
-			bind:this={ed_el}
+			class="editor-inner"
 			tabindex="0"
+			bind:this={ed_el}
 			bind:clientWidth={ed_w}
 			bind:clientHeight={ed_h}
-			class="editor-inner"
 			on:mousedown={selStart}
 			on:mouseup={selEnd}
 			on:keyup={keyUp}
